@@ -1,6 +1,6 @@
 # Importing pygame
 import pygame
-import Game from 2-player-pong/game
+import Game from game.py
 
 def main():
     # Initialize pygame -- this is required for rendering fonts
@@ -18,3 +18,5 @@ def main():
     
     # Start the game
     game.play()
+
+main()
