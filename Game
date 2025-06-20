@@ -1,0 +1,170 @@
+class Game:
+    # Initialize the screen, the ball, the left paddle, the right paddle, 
+    # the left score and the right score, the frames
+    def __init__(self, game_screen):
+        self.screen = game_screen
+        self.bg_color = pygame.Color('black')
+        self.continue_game = True
+        self.close_clicked = False
+        
+        ball_color = pygame.Color('white')
+        ball_pos = [100, 200]
+        ball_velocity = [5, 5]
+        ball_radius = 5 
+        self.ball = Ball(ball_color, ball_radius, ball_pos, ball_velocity, self.screen)    
+        
+        left_color = pygame.Color('white')
+        left_x = 100
+        left_y = 180
+        left_height = 40
+        left_width = 10
+        left_velocity = 5
+        self.left = Paddle(left_x, left_y, left_width, left_height, left_color, self.screen)
+        
+        right_color = pygame.Color('white')
+        right_x = 400
+        right_y = 180
+        right_height = 40
+        right_width = 10
+        right_velocity = 5
+        self.right = Paddle(right_x, right_y, right_width, right_height, right_color, self.screen)                
+        
+        self.scoreA = 0
+        self.scoreB = 0 
+        
+
+    # Play the game until the player presses the close box.
+    def play(self):
+        while not self.close_clicked:
+            self.handle_events()
+            self.draw()
+            self.paddle_moving() 
+            self.collision()            
+            if self.continue_game:
+                self.update() 
+                self.updates_score()
+                self.decide_continue()
+         
+    # Updates the score of each player
+    def updates_score(self):
+        # Updates the score for player left(A), player right(B)
+        if self.ball.center[0] + self.ball.radius > 500:
+            self.scoreA += 1      
+        if self.ball.center[0] < self.ball.radius:
+            self.scoreB += 1  
+
+    # If ball collides with paddles, it bounces back 
+    def collision(self):
+        if self.left.rect.collidepoint(self.ball.center[0], self.ball.center[1]):
+            if self.ball.velocity[0] < 0:
+                self.ball.velocity[0] = -self.ball.velocity[0]
+        if self.right.rect.collidepoint(self.ball.center[0], self.ball.center[1]):
+            if self.ball.velocity[0] > 0:
+                self.ball.velocity[0] = -self.ball.velocity[0]        
+
+    # Checks if the user pressed close box or not
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: 
+                self.close_clicked = True 
+
+    # Moves the paddles 5 pixels up or down according to the key the player presses            
+    def paddle_moving(self):
+        keys = pygame.key.get_pressed()
+        if self.continue_game == True:
+            if keys[pygame.K_q]:
+                self.left.moveUp(10)
+            if keys[pygame.K_a]:
+                self.left.moveDown(10)
+            if keys[pygame.K_p]:
+                self.right.moveUp(10)
+            if keys[pygame.K_l]:
+                self.right.moveDown(10)
+
+    # Draws all the game objects to screen
+    def draw(self):
+        # Clears screen before drawing game objects
+        self.screen.fill(self.bg_color)  
+
+        # draws the ball to screen
+        self.ball.draw()
+        self.left.draw()
+        self.right.draw()  
+        
+        # draws the score to screen
+        WHITE = pygame.Color('white')
+        font = pygame.font.Font(None, 74)
+        text = font.render(str(self.scoreA), 1, WHITE)
+        self.screen.blit(text, (20,10))          
+        text = font.render(str(self.scoreB), 1, WHITE)
+        self.screen.blit(text, (440,10))         
+            
+        # render all drawn objects to the screen
+        pygame.display.flip()        
+
+    # Update all of our game's objects
+    def update(self):
+        self.ball.move()
+        #self.frame_counter = self.frame_counter + 1 
+
+    # Stops the game when one player reaches score of 11
+    def decide_continue(self):
+        if self.scoreA == 11 or self.scoreB == 11:            
+            self.continue_game = False
+        
+            
+class Ball:
+    # Initializes the ball's attributes
+    def __init__(self, color, radius, center, velocity, screen):
+        self.color = color
+        self.radius = radius
+        self.center = center
+        self.velocity = velocity
+        self.screen = screen
+
+    # Changes the location of the ball by adding the corresponding speed values.
+    # Makes the ball bounce off the four walls by reversing its velocity    
+    def move(self):
+        for index in range(0,2):
+            self.center[index] = self.center[index] + self.velocity[index]
+        # left
+        if self.center[0] < self.radius:
+            self.velocity[0] = -self.velocity[0]
+        # top
+        if self.center[1] < self.radius:
+            self.velocity[1] = -self.velocity[1]
+        # right
+        if self.center[0] + self.radius > 500:
+            self.velocity[0] = -self.velocity[0]
+        # bottom
+        if self.center[1] + self.radius > 500:
+            self.velocity[1] = -self.velocity[1]
+
+    # Draws the ball
+    def draw(self):
+        # Draw the dot onto the game's window
+        pygame.draw.circle(self.screen, self.color, self.center, self.radius)
+
+class Paddle:
+    # Initializes the paddles' attributes
+    def __init__(self, x, y, width, height, color, screen):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.color = color
+        self.screen = screen
+
+    # Moves the paddle up by a certian number of pixels
+    def moveUp(self, pixels):
+        self.rect.y -= pixels
+        if self.rect.y < 0:
+            self.rect.y = 0
+         
+     # Moves the paddle down by a certian number of pixels
+    def moveDown(self, pixels):
+        self.rect.y += pixels
+        if self.rect.y > 460:
+            self.rect.y = 460           
+
+    # Draws the paddles
+    def draw(self):
+        # Draw the dot onto the game's window
+        pygame.draw.rect(self.screen, self.color, self.rect)
